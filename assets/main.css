@@ -1,0 +1,599 @@
+body {
+    margin: 0;
+    background: #f5f5f7;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+#container {
+    display: flex;
+    height: 100vh;
+}
+
+/* 深色模式 */
+#container.dark {
+    background: #1e1e24;
+}
+
+/* 侧边栏 */
+.sidebar {
+    width: 220px;
+    background: #2f3542;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 15px;
+    transition: width .3s;
+}
+
+.sidebar .logo {
+    margin: 0 0 10px;
+    font-size: 22px;
+}
+
+.sidebar .collapse-btn {
+    align-self: flex-end;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+}
+
+.sidebar .collapse-btn:hover {
+    background: #57606f;
+}
+
+.sidebar .icon {
+    margin-right: 10px;
+}
+
+.sidebar button {
+    background: none;
+    border: none;
+    color: white;
+    padding: 15px;
+    text-align: left;
+    font-size: 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: .3s;
+}
+
+.sidebar button:hover {
+    background: #57606f;
+}
+
+/* 收起状态 */
+.sidebar.collapsed {
+    width: 76px;
+    align-items: center;
+    padding: 20px 10px;
+}
+
+.sidebar.collapsed .logo,
+.sidebar.collapsed .label {
+    display: none;
+}
+
+.sidebar.collapsed .collapse-btn {
+    align-self: center;
+}
+
+.sidebar.collapsed .icon {
+    margin-right: 0;
+}
+
+.sidebar.collapsed .theme-toggle {
+    margin-top: auto;
+}
+
+.sidebar button.active {
+    background: #ff6b6b;
+}
+
+.sidebar .theme-toggle {
+    margin-top: auto;
+    font-size: 15px;
+    opacity: .85;
+}
+
+/* 内容区 */
+.content {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+    padding: 20px;
+}
+
+/* 页面常驻挂载，仅显示当前页；避免切换页面导致番茄钟状态重置 */
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+/* 计时卡片 */
+#timer {
+    width: 420px;
+    background: white;
+    border-radius: 25px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .15);
+}
+
+#container.dark #timer,
+#container.dark .music {
+    background: #2b2b33;
+    color: #eee;
+}
+
+#container.dark #timer h1 {
+    color: #aaa;
+}
+
+#timer h1 {
+    margin: 0;
+    color: #888;
+    font-size: 22px;
+}
+
+.stats {
+    margin-top: 8px;
+    font-size: 15px;
+    color: #ff6b6b;
+    font-weight: 600;
+}
+
+/* 圆形进度环 */
+.ring-wrap {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin: 10px auto;
+}
+
+.ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ring-bg {
+    fill: none;
+    stroke: #eee;
+    stroke-width: 8;
+}
+
+.ring-fg {
+    fill: none;
+    stroke-width: 8;
+    stroke-linecap: round;
+    transform: rotate(-90deg);
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: stroke-dashoffset 1s linear;
+}
+
+.ring-fg.work {
+    stroke: #ff6b6b;
+}
+
+.ring-fg.break {
+    stroke: #2ecc71;
+}
+
+#container.dark .ring-bg {
+    stroke: #3a3a44;
+}
+
+#time {
+    font-size: 56px;
+    font-weight: bold;
+    letter-spacing: 4px;
+    font-variant-numeric: tabular-nums;
+}
+
+#time.work {
+    color: #ff6b6b;
+}
+
+#time.break {
+    color: #2ecc71;
+}
+
+#controls {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.settings {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 20px;
+    font-size: 15px;
+    color: #666;
+}
+
+.presets {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.presets button {
+    background: #ffe3e3;
+    color: #ff6b6b;
+    padding: 8px 18px;
+    font-size: 15px;
+    border-radius: 20px;
+}
+
+.presets button:hover {
+    background: #ff6b6b;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.sound-settings {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+    font-size: 15px;
+    color: #666;
+}
+
+#container.dark .sound-settings {
+    color: #bbb;
+}
+
+.sound-settings .switch {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.sound-settings input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.sound-settings button {
+    background: #f0f0f0;
+    color: #555;
+    padding: 6px 16px;
+    font-size: 14px;
+    border-radius: 16px;
+}
+
+.sound-settings button:hover {
+    background: #e0e0e0;
+    transform: none;
+}
+
+.sound-settings button.active {
+    background: #ff6b6b;
+    color: white;
+}
+
+.sound-file {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+    font-size: 14px;
+    color: #666;
+}
+
+#container.dark .sound-file {
+    color: #bbb;
+}
+
+.sound-file button {
+    background: #f0f0f0;
+    color: #555;
+    padding: 6px 16px;
+    font-size: 14px;
+    border-radius: 16px;
+}
+
+.sound-file button:hover {
+    background: #e0e0e0;
+    transform: none;
+}
+
+.sound-file button.clear {
+    background: transparent;
+    border: 1px solid #ccc;
+}
+
+.sound-file .file-name {
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#container.dark .settings {
+    color: #bbb;
+}
+
+.settings input {
+    width: 56px;
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 15px;
+    text-align: center;
+}
+
+#container.dark .settings input {
+    background: #1e1e24;
+    border-color: #444;
+    color: #eee;
+}
+
+/* 通用按钮 */
+button {
+    border: none;
+    border-radius: 12px;
+    padding: 14px 35px;
+    font-size: 18px;
+    background: #ff6b6b;
+    color: white;
+    cursor: pointer;
+    transition: .3s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    background: #ff4757;
+}
+
+/* 白噪音页面 */
+.music {
+    width: 420px;
+    background: white;
+    border-radius: 25px;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .15);
+}
+
+.music h1 {
+    margin-top: 0;
+}
+
+.sound-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 18px;
+}
+
+#container.dark .sound-row {
+    border-color: #3a3a44;
+}
+
+.music .hint {
+    margin-top: 20px;
+    color: #aaa;
+    font-size: 14px;
+}
+
+/* 阶段结束弹窗 */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal {
+    background: white;
+    border-radius: 20px;
+    padding: 40px 50px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+}
+
+.modal h2 {
+    margin: 0 0 10px;
+    font-size: 28px;
+}
+
+.modal p {
+    margin: 0 0 25px;
+    color: #666;
+}
+
+/* 总览页面 */
+.overview {
+    width: 560px;
+    max-width: 90%;
+    background: white;
+    border-radius: 25px;
+    padding: 36px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .15);
+}
+
+#container.dark .overview {
+    background: #2b2b33;
+    color: #eee;
+}
+
+.ov-summary {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 28px;
+}
+
+.ov-card {
+    flex: 1;
+    background: #fff4f4;
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+}
+
+#container.dark .ov-card {
+    background: #3a2b2b;
+}
+
+.ov-card h3 {
+    margin: 0 0 8px;
+    font-size: 15px;
+    color: #888;
+    font-weight: 500;
+}
+
+.ov-card p {
+    margin: 0;
+    font-size: 26px;
+    font-weight: bold;
+    color: #ff6b6b;
+}
+
+.calendar {
+    border-radius: 16px;
+    background: #fafafa;
+    padding: 16px;
+}
+
+#container.dark .calendar {
+    background: #23232a;
+}
+
+.cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.cal-header button {
+    background: #eee;
+    color: #444;
+    border: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0;
+}
+
+#container.dark .cal-header button {
+    background: #3a3a44;
+    color: #eee;
+}
+
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+}
+
+.cal-cell {
+    min-height: 56px;
+    border-radius: 10px;
+    background: white;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-size: 14px;
+}
+
+#container.dark .cal-cell {
+    background: #2b2b33;
+}
+
+.cal-cell.empty {
+    background: transparent;
+}
+
+.cal-cell.has-data {
+    cursor: pointer;
+    background: #fff0f0;
+}
+
+#container.dark .cal-cell.has-data {
+    background: #3a2b2b;
+}
+
+.cal-cell.has-data:hover {
+    filter: brightness(0.97);
+}
+
+.cal-cell.weekday {
+    min-height: auto;
+    background: transparent;
+    text-align: center;
+    color: #999;
+    font-weight: 600;
+}
+
+.cal-cell.today {
+    outline: 2px solid #ff6b6b;
+    background: #fff0f0;
+}
+
+#container.dark .cal-cell.today {
+    background: #3a2b2b;
+}
+
+.cal-day {
+    font-weight: 600;
+}
+
+.cal-count {
+    font-size: 12px;
+    color: #ff6b6b;
+}
+
+.detail-times {
+    margin: 14px 0 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    text-align: left;
+}
+
+.detail-time {
+    padding: 6px 10px;
+    margin: 4px 0;
+    background: #fff4f4;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #555;
+}
+
+#container.dark .detail-time {
+    background: #3a2b2b;
+    color: #ddd;
+}
