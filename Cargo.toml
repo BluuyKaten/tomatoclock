@@ -9,9 +9,11 @@ edition = "2021"
 [dependencies]
 dioxus = { version = "0.8.0-alpha.0", features = [] }
 tokio = { version = "1", features = ["time"] }
-rodio = "0.20"
+rodio = { version = "0.20", features = ["symphonia-isomp4", "symphonia-aac"] }
 chrono = "0.4"
 rfd = "0.15"
+rusqlite = { version = "0.40.1", features = ["bundled"] }
+symphonia = { version = "0.5.4", features = ["mp3", "isomp4", "aac", "pcm", "wav", "flac", "vorbis", "adpcm", "alac"] }
 
 [features]
 default = ["desktop"]

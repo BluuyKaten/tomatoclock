@@ -2,11 +2,75 @@ body {
     margin: 0;
     background: #f5f5f7;
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    overflow: hidden;
 }
 
 #container {
     display: flex;
+    flex-direction: column;
     height: 100vh;
+}
+
+/* 自定义标题栏 */
+.title-bar {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    background: #2f3542;
+    color: white;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+#container.dark .title-bar {
+    background: #1e1e24;
+}
+
+.title-drag {
+    flex: 1;
+    height: 100%;
+    cursor: grab;
+}
+
+.title-drag:active {
+    cursor: grabbing;
+}
+
+.title-buttons {
+    display: flex;
+    height: 100%;
+}
+
+.title-btn {
+    width: 46px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 0;
+    padding: 0;
+    transition: background .2s;
+}
+
+.title-btn:hover {
+    background: #57606f;
+    transform: none;
+}
+
+.title-btn.close:hover {
+    background: #e74c3c;
+}
+
+.main-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
 }
 
 /* 深色模式 */
@@ -334,6 +398,25 @@ body {
     white-space: nowrap;
 }
 
+.volume-settings {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+    font-size: 15px;
+    color: #666;
+}
+
+#container.dark .volume-settings {
+    color: #bbb;
+}
+
+.volume-settings input[type="range"] {
+    width: 120px;
+    cursor: pointer;
+}
+
 #container.dark .settings {
     color: #bbb;
 }
@@ -386,7 +469,7 @@ button:hover {
 .sound-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 8px;
     padding: 16px 0;
     border-bottom: 1px solid #eee;
     font-size: 18px;
@@ -396,10 +479,120 @@ button:hover {
     border-color: #3a3a44;
 }
 
-.music .hint {
+.sound-row .sound-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sound-row .name-edit {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+#container.dark .sound-row .name-edit {
+    background: #1e1e24;
+    border-color: #444;
+    color: #eee;
+}
+
+.sound-row .icon-btn {
+    background: #f0f0f0;
+    color: #666;
+    border: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    font-size: 15px;
+    cursor: pointer;
+    padding: 0;
+    transition: background .2s;
+}
+
+.sound-row .icon-btn:hover {
+    background: #e0e0e0;
+    transform: none;
+}
+
+#container.dark .sound-row .icon-btn {
+    background: #3a3a44;
+    color: #ddd;
+}
+
+#container.dark .sound-row .icon-btn:hover {
+    background: #4a4a54;
+}
+
+.sound-row .icon-btn.del:hover {
+    background: #e74c3c;
+    color: white;
+}
+
+.sound-row .play-btn {
+    padding: 8px 18px;
+    font-size: 15px;
+    border-radius: 16px;
+    background: #ffe3e3;
+    color: #ff6b6b;
+}
+
+.sound-row .play-btn:hover {
+    background: #ff6b6b;
+    color: white;
+    transform: none;
+}
+
+.sound-row .play-btn.active {
+    background: #ff6b6b;
+    color: white;
+}
+
+.noise-add {
+    display: flex;
+    justify-content: center;
     margin-top: 20px;
+}
+
+.noise-add button {
+    background: #ff6b6b;
+    color: white;
+    padding: 10px 24px;
+    font-size: 15px;
+    border-radius: 20px;
+}
+
+.noise-add button:hover {
+    background: #ff4757;
+}
+
+.music .hint {
+    margin-top: 16px;
     color: #aaa;
-    font-size: 14px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.noise-volume {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 0 0 10px;
+    font-size: 15px;
+    color: #666;
+}
+
+.noise-volume input[type="range"] {
+    width: 120px;
+    cursor: pointer;
+}
+
+#container.dark .noise-volume {
+    color: #bbb;
 }
 
 /* 阶段结束弹窗 */
