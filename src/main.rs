@@ -638,6 +638,17 @@ fn Timer() -> Element {
                 }
                 button {
                     onclick: move |_| {
+                        // 专注阶段暂停且已专注超过15分钟时，记录已专注的时间
+                        let total_work_secs = work_mins() * 60;
+                        let remaining_secs = remaining();
+                        if phase() == Phase::Work && remaining_secs < total_work_secs {
+                            let elapsed_mins = (total_work_secs - remaining_secs) / 60;
+                            if elapsed_mins >= 15 {
+                                let ts = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+                                db::save_pomodoro(&ts, elapsed_mins as u32);
+                                count.set(db::today_count());
+                            }
+                        }
                         running.set(false);
                         deadline.set(None);
                         remaining.set(phase_reset(phase(), work_mins()));
