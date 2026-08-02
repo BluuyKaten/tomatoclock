@@ -7,5 +7,5 @@
 **/*.rs.bk
 
 # 忽略MP3 MP4文件
-assets/noise/*.mp3
-assets/noise/*.mp4
+assets/noise/**/*.mp3
+assets/noise/**/*.mp4
