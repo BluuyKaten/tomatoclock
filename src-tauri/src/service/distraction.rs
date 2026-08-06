@@ -310,13 +310,17 @@ impl DistractionService {
         if should_check_window {
             rt.last_window_check = Some(now);
         }
+        // [FIX] 分心暂停期间跳过输入空闲检测，避免重复触发
+        let distracted = rt.distracted;
         // 提前释放锁，避免在 await 中持锁
         drop(rt);
 
         if should_check_window {
             Self::check_window(inner, pool, bus, app, user_id, pomodoro_id).await?;
         }
-        Self::check_input(inner, pool, bus, app, user_id, pomodoro_id, idle_threshold).await?;
+        if !distracted {
+            Self::check_input(inner, pool, bus, app, user_id, pomodoro_id, idle_threshold).await?;
+        }
 
         Ok(())
     }
