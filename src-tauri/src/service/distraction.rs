@@ -218,9 +218,10 @@ impl DistractionService {
         drop(rt); // 释放锁，避免任务内重复持锁死锁
 
         let app = self.app.clone();
+        let timer = self.timer.clone();
         // 启动后台 tick 循环（每秒一次）
         tokio::spawn(async move {
-            Self::tick_loop(inner, pool, bus, app, stop_rx).await;
+            Self::tick_loop(inner, pool, bus, app, timer, stop_rx).await;
         });
 
         info!(pomodoro_id, "分心检测已启动（含后台 tick 循环）");
@@ -259,6 +260,7 @@ impl DistractionService {
         pool: DbPool,
         bus: EventBus,
         app: tauri::AppHandle,
+        timer: std::sync::Arc<TimerService>,
         mut stop_rx: tokio::sync::oneshot::Receiver<()>,
     ) {
         let mut interval = tokio::time::interval(std::time::Duration::from_secs(1));
@@ -267,7 +269,7 @@ impl DistractionService {
         loop {
             tokio::select! {
                 _ = interval.tick() => {
-                    if let Err(e) = Self::tick_once(&inner, &pool, &bus, &app).await {
+                    if let Err(e) = Self::tick_once(&inner, &pool, &bus, &app, &timer).await {
                         warn!(error = %e, "分心检测 tick 失败");
                     }
                 }
@@ -285,6 +287,7 @@ impl DistractionService {
         pool: &DbPool,
         bus: &EventBus,
         app: &tauri::AppHandle,
+        timer: &std::sync::Arc<TimerService>,
     ) -> AppResult<()> {
         let mut rt = inner.lock().await;
         if !rt.enabled {
@@ -316,7 +319,7 @@ impl DistractionService {
         drop(rt);
 
         if should_check_window {
-            Self::check_window(inner, pool, bus, app, user_id, pomodoro_id).await?;
+            Self::check_window(inner, pool, bus, app, user_id, pomodoro_id, timer).await?;
         }
         if !distracted {
             Self::check_input(inner, pool, bus, app, user_id, pomodoro_id, idle_threshold).await?;
@@ -332,6 +335,7 @@ impl DistractionService {
         app: &tauri::AppHandle,
         user_id: i64,
         pomodoro_id: i64,
+        timer: &std::sync::Arc<TimerService>,
     ) -> AppResult<()> {
         let Some(candidate) = WindowDetector.detect().await else {
             debug!("[distraction] 无法读取前台窗口信息");
@@ -342,16 +346,62 @@ impl DistractionService {
             window_title = %candidate.window_title.as_deref().unwrap_or(""),
             "[distraction] 检测到前台窗口"
         );
-        if Self::matches_rule(pool, user_id, &candidate) {
-            info!(
-                app_name = %candidate.app_name.as_deref().unwrap_or(""),
-                "[distraction] 命中规则，记录分心"
-            );
-            Self::record(inner, pool, bus, app, user_id, pomodoro_id, candidate, 0)
-                .await?;
-        } else {
-            debug!(app_name = %candidate.app_name.as_deref().unwrap_or(""), "[distraction] 未命中任何规则");
+
+        let matches_rule = Self::matches_rule(pool, user_id, &candidate);
+
+        // 读取当前 distracted 状态
+        let mut rt = inner.lock().await;
+        let transition = evaluate_distraction_transition(rt.distracted, matches_rule);
+
+        match transition {
+            DistractionTransition::EnteredDistraction => {
+                // 进入分心状态
+                rt.distracted = true;
+                let app_name = candidate.app_name.clone();
+                let window_title = candidate.window_title.clone();
+                let candidate_clone = candidate.clone();
+                drop(rt); // 释放锁后再调用外部服务
+
+                info!(
+                    app_name = %app_name.as_deref().unwrap_or(""),
+                    "[distraction] 命中规则，暂停计时并记录分心"
+                );
+                // 暂停计时器
+                if let Err(e) = timer.pause(pool).await {
+                    warn!(error = %e, "[distraction] 暂停计时器失败");
+                }
+                // 记录分心（+1）+ 系统通知
+                Self::record(inner, pool, bus, app, user_id, pomodoro_id, candidate_clone, 0).await?;
+                // 发事件通知前端弹窗
+                bus.emit(AppEvent::DistractionPaused {
+                    pomodoro_id,
+                    app_name,
+                    window_title,
+                });
+            }
+            DistractionTransition::ExitedDistraction => {
+                // 恢复专注
+                rt.distracted = false;
+                drop(rt);
+
+                info!("[distraction] 回到专注，恢复计时");
+                // 恢复计时器
+                if let Err(e) = timer.resume(pool).await {
+                    warn!(error = %e, "[distraction] 恢复计时器失败");
+                }
+                // 发事件通知前端关闭弹窗
+                bus.emit(AppEvent::DistractionResumed { pomodoro_id });
+            }
+            DistractionTransition::NoChange => {
+                debug!(
+                    distracted = rt.distracted,
+                    matches_rule,
+                    "[distraction] 状态无变化"
+                );
+                drop(rt);
+            }
         }
+
         Ok(())
     }
 
