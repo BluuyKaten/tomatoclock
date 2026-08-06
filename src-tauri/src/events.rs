@@ -42,6 +42,16 @@ pub enum AppEvent {
         app_name: Option<String>,
         window_title: Option<String>,
     },
+    /// 分心暂停：检测到分心窗口，计时器已暂停
+    DistractionPaused {
+        pomodoro_id: i64,
+        app_name: Option<String>,
+        window_title: Option<String>,
+    },
+    /// 分心恢复：用户回到专注，计时器已恢复
+    DistractionResumed {
+        pomodoro_id: i64,
+    },
     /// 渐进式提醒触发
     ReminderTriggered {
         pomodoro_id: i64,
@@ -62,6 +72,8 @@ impl AppEvent {
             AppEvent::PomodoroCompleted { .. } => "tomatoclock://pomodoro-completed",
             AppEvent::PomodoroStopped { .. } => "tomatoclock://pomodoro-stopped",
             AppEvent::DistractionDetected { .. } => "tomatoclock://distraction",
+            AppEvent::DistractionPaused { .. } => "tomatoclock://distraction-paused",
+            AppEvent::DistractionResumed { .. } => "tomatoclock://distraction-resumed",
             AppEvent::ReminderTriggered { .. } => "tomatoclock://reminder",
             AppEvent::UserChanged { .. } => "tomatoclock://user-changed",
         }
