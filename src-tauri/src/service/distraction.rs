@@ -18,6 +18,27 @@ use crate::repository::distractions::DistractionRepo;
 use crate::repository::app_settings::AppSettingRepo;
 use tauri_plugin_notification::NotificationExt;
 
+/// 分心状态转换结果
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DistractionTransition {
+    /// 进入分心状态（需要暂停计时 + 记录分心）
+    EnteredDistraction,
+    /// 退出分心状态（需要恢复计时）
+    ExitedDistraction,
+    /// 状态无变化
+    NoChange,
+}
+
+/// 纯函数：根据当前状态与窗口匹配结果，计算状态转换
+/// 可独立单测，无需 Tauri / tokio 环境
+pub fn evaluate_distraction_transition(distracted: bool, matches_rule: bool) -> DistractionTransition {
+    match (distracted, matches_rule) {
+        (false, true) => DistractionTransition::EnteredDistraction,
+        (true, false) => DistractionTransition::ExitedDistraction,
+        _ => DistractionTransition::NoChange,
+    }
+}
+
 /// 候选分心事件（检测器产出）
 #[derive(Debug, Clone)]
 pub struct DistractionCandidate {
@@ -438,5 +459,43 @@ impl DistractionService {
         });
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::evaluate_distraction_transition;
+    use super::DistractionTransition;
+
+    #[test]
+    fn test_entered_distraction_when_not_distracted_and_matches() {
+        assert_eq!(
+            evaluate_distraction_transition(false, true),
+            DistractionTransition::EnteredDistraction
+        );
+    }
+
+    #[test]
+    fn test_exited_distraction_when_distracted_and_not_matches() {
+        assert_eq!(
+            evaluate_distraction_transition(true, false),
+            DistractionTransition::ExitedDistraction
+        );
+    }
+
+    #[test]
+    fn test_no_change_when_not_distracted_and_not_matches() {
+        assert_eq!(
+            evaluate_distraction_transition(false, false),
+            DistractionTransition::NoChange
+        );
+    }
+
+    #[test]
+    fn test_no_change_when_distracted_and_matches() {
+        assert_eq!(
+            evaluate_distraction_transition(true, true),
+            DistractionTransition::NoChange
+        );
     }
 }
