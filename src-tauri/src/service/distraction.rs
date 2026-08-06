@@ -16,6 +16,7 @@ use crate::repository::app_rules::AppRuleRepo;
 use crate::repository::distractions::DistractionRepo;
 // [FIX] 导入 AppSettingRepo 以读取分心检测配置
 use crate::repository::app_settings::AppSettingRepo;
+use crate::service::timer::TimerService;
 use tauri_plugin_notification::NotificationExt;
 
 /// 分心状态转换结果
@@ -153,6 +154,8 @@ pub struct DistractionService {
     bus: EventBus,
     /// Tauri AppHandle（用于发送 Windows 系统通知）
     app: tauri::AppHandle,
+    /// [FIX] 持有计时器服务，用于分心时暂停 / 恢复
+    timer: std::sync::Arc<TimerService>,
 }
 
 #[derive(Debug)]
@@ -167,10 +170,17 @@ struct DistractionRuntime {
     tick_stop: Option<tokio::sync::oneshot::Sender<()>>,
     // 上次发送系统通知的时间（用于通知冷却，避免刷屏）
     last_notification: Option<std::time::Instant>,
+    /// [FIX] 是否处于分心暂停状态（检测到分心窗口后 true，回到专注后 false）
+    distracted: bool,
 }
 
 impl DistractionService {
-    pub fn new(app: tauri::AppHandle, bus: EventBus, pool: DbPool) -> Self {
+    pub fn new(
+        app: tauri::AppHandle,
+        bus: EventBus,
+        pool: DbPool,
+        timer: std::sync::Arc<TimerService>,
+    ) -> Self {
         Self {
             inner: Arc::new(Mutex::new(DistractionRuntime {
                 enabled: false,
@@ -180,10 +190,12 @@ impl DistractionService {
                 last_input_check: None,
                 tick_stop: None,
                 last_notification: None,
+                distracted: false,
             })),
             pool,
             bus,
             app,
+            timer,
         }
     }
 
@@ -195,6 +207,7 @@ impl DistractionService {
         rt.current_user = Some(user_id);
         rt.last_window_check = None;
         rt.last_input_check = None;
+        rt.distracted = false;
 
         // 创建停止通道，并把发送端存入运行时
         let (stop_tx, stop_rx) = tokio::sync::oneshot::channel();
