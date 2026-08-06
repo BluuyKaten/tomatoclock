@@ -156,6 +156,31 @@
   {/each}
 </div>
 
+<!-- [FIX] 分心提醒模态弹窗：检测到分心窗口时弹出 -->
+{#if $distractionStore.isDistracted}
+  <div class="distraction-modal-mask">
+    <div class="distraction-modal card col gap-12">
+      <h3>⚠️ 分心提醒</h3>
+      <p>检测到您在分心：</p>
+      <p class="app-name">{$distractionStore.appName ?? '未知应用'}</p>
+      {#if $distractionStore.windowTitle}
+        <p class="muted small">{$distractionStore.windowTitle}</p>
+      {/if}
+      <p class="muted small">番茄钟已暂停，请回到专注！</p>
+      <button
+        class="btn-primary"
+        style="align-self:center"
+        on:click={() => {
+          // 用户已知晓；弹窗保持显示直到后端发 DistractionResumed 才关闭
+          // （避免用户没真的回到专注就手动关掉）
+        }}
+      >
+        我知道了
+      </button>
+    </div>
+  </div>
+{/if}
+
 <style>
   /* [FIX] 让 #app 撑满视口，避免登录/加载容器高度塌陷 */
   :global(#app) {
@@ -226,4 +251,31 @@
   .toast-info { background: #3b82f6; }
   .toast-success { background: var(--success); }
   .toast-error { background: var(--danger); }
+  .distraction-modal-mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+  }
+  .distraction-modal {
+    width: min(420px, 90vw);
+    padding: 32px;
+    animation: modal-pop 0.2s ease-out;
+  }
+  .distraction-modal .app-name {
+    font-weight: 600;
+    font-size: 16px;
+    text-align: center;
+    padding: 8px 16px;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 6px;
+    color: #ef4444;
+  }
+  @keyframes modal-pop {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
 </style>
