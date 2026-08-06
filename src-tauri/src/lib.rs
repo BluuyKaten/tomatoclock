@@ -76,11 +76,12 @@ pub fn run() {
             let event_bus = events::EventBus::new().with_app(handle.clone());
             app.manage(event_bus.clone());
 
-            let timer = TimerService::new(handle.clone(), event_bus.clone());
-            app.manage(timer);
+            // 装配计时器服务（Arc 包装，同时注册到 Tauri 并注入 DistractionService）
+            let timer = std::sync::Arc::new(TimerService::new(handle.clone(), event_bus.clone()));
+            app.manage(timer.clone());
 
             let pool = app.state::<AppState>().db().clone();
-            let distraction = DistractionService::new(handle.clone(), event_bus.clone(), pool);
+            let distraction = DistractionService::new(handle.clone(), event_bus.clone(), pool, timer.clone());
             app.manage(distraction);
 
             let reminder = ReminderService::new(handle.clone(), event_bus.clone());
