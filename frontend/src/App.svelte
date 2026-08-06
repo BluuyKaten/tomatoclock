@@ -16,12 +16,14 @@
   } from './stores/index';
   import { authApi } from './api/client';
   import { listen } from '@tauri-apps/api/event';
+  import { getCurrentWindow } from '@tauri-apps/api/window';
 
   import LoginView from './views/LoginView.svelte';
   import TimerView from './views/TimerView.svelte';
   import NotesView from './views/NotesView.svelte';
   import StatsView from './views/StatsView.svelte';
   import SettingsView from './views/SettingsView.svelte';
+  import { distractionStore } from './stores/distraction';
 
   let loading = true;
 
@@ -46,6 +48,28 @@
       // 实时累加当前番茄的分心次数
       timer.update((t) => ({ ...t, distraction_count: t.distraction_count + 1 }));
       pushToast({ kind: 'info', message: '检测到分心，请回到学习' });
+    });
+
+    // [FIX] 监听分心暂停/恢复事件，驱动模态弹窗 + 抢焦点
+    // 分心暂停 → 弹窗 + 抢焦点
+    await listen('tomatoclock://distraction-paused', (event) => {
+      const payload = event.payload as {
+        pomodoro_id: number;
+        app_name?: string;
+        window_title?: string;
+      };
+      distractionStore.set({
+        isDistracted: true,
+        appName: payload.app_name ?? null,
+        windowTitle: payload.window_title ?? null,
+      });
+      // 抢焦点：强制把番茄钟窗口置顶
+      getCurrentWindow().setFocus().catch(() => {});
+    });
+
+    // 分心恢复 → 关弹窗
+    await listen('tomatoclock://distraction-resumed', () => {
+      distractionStore.reset();
     });
 
     // 自动登录：本地有会话令牌则尝试恢复会话
