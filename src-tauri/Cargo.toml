@@ -1,0 +1,71 @@
+[package]
+name = "tomatoclock"
+version = "0.2.0"
+description = "跨平台番茄钟 - 专注计时 + 多模态分心检测 + 学习记录与分析 + 离线优先"
+authors = ["BluuyKaten <1808660458@qq.com>"]
+edition = "2021"
+rust-version = "1.77"
+
+# [FIX] 添加二进制目标：Tauri CLI 需要 main.rs 入口
+[[bin]]
+name = "tomatoclock"
+path = "src/main.rs"
+
+# 新 UI 入口：由 Tauri 管理的前端静态资源
+[lib]
+name = "tomatoclock_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# === Tauri 2 核心 ===
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
+tauri-plugin-notification = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+
+# === 异步运行时 ===
+tokio = { version = "1", features = ["full"] }
+
+# === 序列化 ===
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# === 数据库（SQLite 嵌入式） ===
+rusqlite = { version = "0.32", features = ["bundled"] }
+r2d2 = "0.8"
+r2d2_sqlite = "0.25"
+
+# === 密码哈希（argon2） ===
+argon2 = "0.5"
+rand = "0.8"
+sha2 = "0.10"
+hex = "0.4"
+
+# === 时间处理 ===
+chrono = { version = "0.4", features = ["serde"] }
+
+# === 异步 trait ===
+async-trait = "0.1"
+
+# === 工具 ===
+uuid = { version = "1", features = ["v4"] }
+regex = "1"
+thiserror = "1"
+once_cell = "1"
+
+# === 结构化日志 ===
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter", "json"] }
+tracing-appender = "0.2"
+
+# === HTTP（LLM 调用预留） ===
+reqwest = { version = "0.12", features = ["json"], optional = true }
+
+[features]
+default = ["custom-protocol"]
+# LLM 深度复盘功能开关；默认不启用以控制体积
+llm = ["reqwest"]
+custom-protocol = ["tauri/custom-protocol"]

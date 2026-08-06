@@ -1,0 +1,42 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/.schema/config.schema.json",
+  "productName": "TomatoClock",
+  "version": "0.2.0",
+  "identifier": "com.tomatoclock.app",
+  "build": {
+    "beforeDevCommand": "npm run dev --prefix Z:/Code/rust/fanqiezhong/tomatoclock-tauri/frontend",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "npm run build --prefix Z:/Code/rust/fanqiezhong/tomatoclock-tauri/frontend",
+    "frontendDist": "Z:/Code/rust/fanqiezhong/tomatoclock-tauri/frontend/dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "番茄钟",
+        "width": 350,
+        "height": 460,
+        "minWidth": 350,
+        "minHeight": 460,
+        "resizable": true,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "Productivity",
+    "shortDescription": "专注计时 + 分心检测 + 学习记录",
+    "longDescription": "一款以 Rust 实现的跨平台番茄钟，提供番茄计时、多模态分心检测、渐进式提醒、学习记录与统计分析。"
+  }
+}
