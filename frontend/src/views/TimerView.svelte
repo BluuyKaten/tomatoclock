@@ -2,37 +2,13 @@
   番茄钟主视图：开始/暂停/恢复/完成/放弃 + 实时倒计时
 -->
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
-  import { timer, timerDisplay, isTimerRunning, pushToast } from '../stores/index';
-  import { pomodoroApi } from '../api/client';
+  import { onMount } from 'svelte';
+  import { timer, timerDisplay, isTimerRunning, pushToast, startLocalTimer, stopLocalTimer } from '../stores/index';
+  import { pomodoroApi } from './../api/client';
 
   let subjectId: number | undefined;
   let duration = 25; // 分钟
   let busy = false;
-
-  // [FIX] 本地定时器：每秒递减剩余秒数，作为倒计时主驱动。
-  // 后端 TimerTick 事件仅作同步兜底，避免事件机制异常导致倒计时停滞。
-  let localTimer: ReturnType<typeof setInterval> | null = null;
-
-  function startLocalTimer() {
-    stopLocalTimer();
-    localTimer = setInterval(() => {
-      timer.update((t) => {
-        if (t.status === 0 && t.remaining_seconds > 0) {
-          return { ...t, remaining_seconds: t.remaining_seconds - 1 };
-        }
-        return t;
-      });
-    }, 1000);
-  }
-  function stopLocalTimer() {
-    if (localTimer !== null) {
-      clearInterval(localTimer);
-      localTimer = null;
-    }
-  }
-
-  onDestroy(stopLocalTimer);
 
   onMount(async () => {
     try {

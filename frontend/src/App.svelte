@@ -12,9 +12,12 @@
     loadPersistedToken,
     persistToken,
     persistRememberedUsername,
+    startLocalTimer,
+    stopLocalTimer,
     type Route,
   } from './stores/index';
   import { authApi } from './api/client';
+  import { pomodoroApi } from './api/client';
   import { listen } from '@tauri-apps/api/event';
   import { getCurrentWindow } from '@tauri-apps/api/window';
 
@@ -39,6 +42,9 @@
         // [FIX] 保留 planned_duration：若已有值则保留，否则用 remaining 兜底（首次 tick 近似值）
         planned_duration: t.planned_duration > 0 ? t.planned_duration : p.remaining_seconds,
       }));
+      // [FIX] 后端仅 emit 一次初始 tick，由前端本地定时器持续递减；根据状态启停
+      if (p.status === 0) startLocalTimer();
+      else stopLocalTimer();
     });
     await listen('tomatoclock://pomodoro-completed', () => {
       timer.set({ id: null, remaining_seconds: 0, planned_duration: 0, status: 1, distraction_count: 0 });
@@ -70,6 +76,15 @@
     // 分心恢复 → 关弹窗
     await listen('tomatoclock://distraction-resumed', () => {
       distractionStore.reset();
+    });
+
+    // 托盘菜单「开始专注」：根据当前番茄状态开始/暂停
+    await listen('tray://toggle-pomodoro', () => {
+      if ($timer.status === 0) {
+        pomodoroApi.pause().catch((e) => pushToast({ kind: 'error', message: String(e) }));
+      } else {
+        pomodoroApi.start().catch((e) => pushToast({ kind: 'error', message: String(e) }));
+      }
     });
 
     // 自动登录：本地有会话令牌则尝试恢复会话

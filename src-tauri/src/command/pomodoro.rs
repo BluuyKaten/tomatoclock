@@ -1,5 +1,7 @@
 //! 番茄计时器命令（对齐上游 §7.3）
 
+use std::sync::Arc;
+
 use tauri::{State};
 
 use crate::command::helpers::ok;
@@ -16,7 +18,7 @@ use crate::AppState;
 #[tauri::command]
 pub async fn start_pomodoro(
     state: State<'_, AppState>,
-    timer: State<'_, TimerService>,
+    timer: State<'_, Arc<TimerService>>,
     distraction: State<'_, DistractionService>,
     bus: State<'_, EventBus>,
     req: StartPomodoroRequest,
@@ -48,7 +50,7 @@ pub async fn start_pomodoro(
 #[tauri::command]
 pub async fn pause_pomodoro(
     state: State<'_, AppState>,
-    timer: State<'_, TimerService>,
+    timer: State<'_, Arc<TimerService>>,
     distraction: State<'_, DistractionService>,
 ) -> Result<ApiResponse<PausePomodoroResponse>, AppError> {
     let _user_id = state.current_user_id()?;
@@ -71,7 +73,7 @@ pub async fn pause_pomodoro(
 #[tauri::command]
 pub async fn resume_pomodoro(
     state: State<'_, AppState>,
-    timer: State<'_, TimerService>,
+    timer: State<'_, Arc<TimerService>>,
     distraction: State<'_, DistractionService>,
 ) -> Result<ApiResponse<ResumePomodoroResponse>, AppError> {
     let _user_id = state.current_user_id()?;
@@ -89,7 +91,7 @@ pub async fn resume_pomodoro(
 #[tauri::command]
 pub async fn complete_pomodoro(
     state: State<'_, AppState>,
-    timer: State<'_, TimerService>,
+    timer: State<'_, Arc<TimerService>>,
     distraction: State<'_, DistractionService>,
 ) -> Result<ApiResponse<CompletePomodoroResponse>, AppError> {
     let _user_id = state.current_user_id()?;
@@ -110,7 +112,7 @@ pub async fn complete_pomodoro(
 #[tauri::command]
 pub async fn abandon_pomodoro(
     state: State<'_, AppState>,
-    timer: State<'_, TimerService>,
+    timer: State<'_, Arc<TimerService>>,
     distraction: State<'_, DistractionService>,
     req: AbandonPomodoroRequest,
 ) -> Result<ApiResponse<AbandonPomodoroResponse>, AppError> {
@@ -130,7 +132,7 @@ pub async fn abandon_pomodoro(
 #[tauri::command]
 pub async fn get_current_pomodoro(
     state: State<'_, AppState>,
-    timer: State<'_, TimerService>,
+    timer: State<'_, Arc<TimerService>>,
 ) -> Result<ApiResponse<Option<CurrentPomodoroResponse>>, AppError> {
     let _user_id = state.current_user_id()?;
     let pool = state.db();

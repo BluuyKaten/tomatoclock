@@ -12,6 +12,7 @@
   let longBreak = 15;
   let idleThreshold = 30;
   let windowInterval = 1000;
+  let closeBehavior = 'tray';
 
   let rules: RuleView[] = [];
   let newRuleType = 1;
@@ -26,14 +27,21 @@
     return typeof v === 'number' ? v : fallback;
   };
 
+  // 从 Record<string, unknown> 中安全读取字符串配置
+  const str = (s: Record<string, unknown>, k: string, fallback: string) => {
+    const v = s[k];
+    return typeof v === 'string' ? v : fallback;
+  };
+
   async function loadSettings() {
     try {
       const { settings } = await settingsApi.get();
-      focusDuration = num(settings, 'timer.focus_duration', 25);
+      focusDuration = num(settings, 'timer.focus_duration', 1500) / 60;
       shortBreak = num(settings, 'timer.short_break', 5);
       longBreak = num(settings, 'timer.long_break', 15);
       idleThreshold = num(settings, 'distraction.idle_threshold_sec', 30);
       windowInterval = num(settings, 'distraction.window_check_interval_ms', 1000);
+      closeBehavior = str(settings, 'app.close_behavior', 'tray');
     } catch (e) { pushToast({ kind: 'error', message: String(e) }); }
   }
 
@@ -45,11 +53,12 @@
   async function save() {
     try {
       await settingsApi.update({
-        'timer.focus_duration': focusDuration,
+        'timer.focus_duration': focusDuration * 60,
         'timer.short_break': shortBreak,
         'timer.long_break': longBreak,
         'distraction.idle_threshold_sec': idleThreshold,
         'distraction.window_check_interval_ms': windowInterval,
+        'app.close_behavior': closeBehavior,
       });
       pushToast({ kind: 'success', message: '已保存' });
     } catch (e) { pushToast({ kind: 'error', message: String(e) }); }
@@ -127,6 +136,14 @@
     <label class="row"><span style="width:160px">专注时长（分钟）</span><input type="number" bind:value={focusDuration} /></label>
     <label class="row"><span style="width:160px">短休（分钟）</span><input type="number" bind:value={shortBreak} /></label>
     <label class="row"><span style="width:160px">长休（分钟）</span><input type="number" bind:value={longBreak} /></label>
+    <label class="row">
+      <span style="width:160px">关闭按钮行为</span>
+      <select bind:value={closeBehavior}>
+        <option value="tray">最小化到托盘</option>
+        <option value="taskbar">最小化到任务栏</option>
+        <option value="quit">退出程序</option>
+      </select>
+    </label>
     <button class="btn-primary" style="align-self:flex-start" on:click={save}>保存</button>
   </div>
 

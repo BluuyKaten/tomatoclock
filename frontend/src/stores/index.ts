@@ -69,6 +69,29 @@ export const timer = writable<TimerState>({
   distraction_count: 0,
 });
 
+// [FIX] 本地定时器移到全局 store：无论从哪里启动（前端按钮/托盘），
+// 只要收到 running 状态的 tick 就驱动倒计时递减，避免 TimerView 局部定时器遗漏。
+let localTimer: ReturnType<typeof setInterval> | null = null;
+
+export function startLocalTimer() {
+  stopLocalTimer();
+  localTimer = setInterval(() => {
+    timer.update((t) => {
+      if (t.status === 0 && t.remaining_seconds > 0) {
+        return { ...t, remaining_seconds: t.remaining_seconds - 1 };
+      }
+      return t;
+    });
+  }, 1000);
+}
+
+export function stopLocalTimer() {
+  if (localTimer !== null) {
+    clearInterval(localTimer);
+    localTimer = null;
+  }
+}
+
 // 番茄钟是否在进行中（status === 0）
 export const isTimerRunning: Readable<boolean> = derived(
   timer,
